@@ -21,6 +21,10 @@ load_dotenv()
 base_dir = os.getenv('BASE_DIRECTORY')
 base_dir = Path(base_dir)
 
+sys.path.insert(0, str(base_dir / "src" / "data"))
+from common_functions import FW_GridSearchCV, get_most_recent_hyperparameters
+
+
 current_datetime = dt.datetime.now().strftime("%d%m%Y_%H%M")
 
 # Externally declared parameters
@@ -120,89 +124,6 @@ scoring_methods = {"precision": "precision",
            "geometric": make_scorer(geometric_mean_score, greater_is_better=True, average='binary')
           }
 
-def FW_GridSearchCV(features, labels, indice, model, parameter_grid, scoring_methods, rank_by):
-    # Convert features to array and create a DataFrame
-    input_array = features.toarray()
-    input_dataframe = pd.DataFrame(input_array, index=indice)
-    input_dataframe['year'] = input_dataframe.index.year
-    input_dataframe.columns = input_dataframe.columns.astype(str)
-
-    # Get unique years
-    unique_years = sorted(input_dataframe['year'].unique())
-    n_splits = min(9, len(unique_years))
-    years_per_split = len(unique_years) // n_splits
-
-    training_sets = {}
-    training_labels = {}
-    tscv = {}
-    grid_search = {}
-
-    best_score = float('-inf')
-    best_params = None
-
-    for i in range(n_splits):
-        # Calculate the start year for each split
-        start_year = unique_years[i * years_per_split]
-
-        # Extract indexes for each year
-        ind = input_dataframe.query(f'year >= {start_year}').index
-
-        # Filter training set and labels
-        training_sets[start_year] = input_dataframe.loc[ind]
-        training_labels[start_year] = labels.loc[ind]
-
-        # Define time-series split
-        tscv[start_year] = TimeSeriesSplit(n_splits=i + 2, max_train_size=None, test_size=None, gap=0)
-
-        # Define GridSearchCV
-        grid_search[start_year] = GridSearchCV(estimator=model, cv=tscv[start_year], param_grid=parameter_grid, scoring=scoring_methods,
-                                               verbose=3, return_train_score=True, refit=False, n_jobs=1)
-
-        # Fit the model
-        grid_search[start_year].fit(training_sets[start_year], training_labels[start_year])
-
-        # Check if this model has better score than previous best
-        current_best_index = grid_search[start_year].cv_results_['rank_test_' + rank_by].argmin()
-        current_best_score = grid_search[start_year].cv_results_['mean_test_' + rank_by][current_best_index]
-
-        if current_best_score > best_score:
-            best_score = current_best_score
-            best_params = grid_search[start_year].cv_results_['params'][current_best_index]
-
-    # Collect results in a DataFrame
-    cvres_pd = pd.concat([pd.DataFrame(grid_search[year].cv_results_) for year in training_sets.keys()])
-
-    # Add date run
-    cvres_pd["date_run"] = pd.Series([dt.datetime.now()] * len(cvres_pd))
-
-    # Rank by selected metric
-    cvres_pd = cvres_pd.sort_values(by=f'mean_test_{rank_by}', ascending=False)
-
-    return cvres_pd, best_params
-
-
-
-def get_most_recent_hyperparameters(directory):
-    # Get list of files in the directory
-    files = os.listdir(directory)
-
-    # Keep only files that end with '.pkl'
-    pkl_files = [file for file in files if file.endswith('.pkl')]
-
-    # Extract numbers from filenames and convert to datetime
-    datetimes = {}
-    for file in pkl_files:
-        # Extract numbers
-        numbers = ''.join(ch for ch in file if ch.isdigit())
-        # Convert to datetime
-        dt_x = dt.datetime.strptime(numbers, '%d%m%Y%H%M')
-        datetimes[dt_x] = file
-
-    # Get the filename corresponding to the most recent date
-    max_dt = max(datetimes.keys())
-    most_recent_file = datetimes[max_dt]
-
-    return most_recent_file
 
 hyperparameter_dir = base_dir/"data"/"processed"/"hyperparameter_tuning"/outcome_selection
 
