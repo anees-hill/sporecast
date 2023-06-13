@@ -1,6 +1,3 @@
-import pandas as pd
-import numpy as np
-
 # Discretise wind direction degrees
 def reclassify_direction(direction):
     if (direction >= 348.75) or (direction < 11.25):

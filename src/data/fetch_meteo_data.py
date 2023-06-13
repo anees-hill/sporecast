@@ -1,10 +1,8 @@
-#%%
 import pandas as pd
 import cdsapi
 
 c = cdsapi.Client()
 
-#%%
 c.retrieve(
     'reanalysis-era5-land',
     {

@@ -3,31 +3,34 @@ import psycopg2
 import pandas as pd
 from pathlib import Path
 from dotenv import load_dotenv
+import luigi
+from luigi import LocalTarget
 
-load_dotenv()
-base_dir = os.getenv('BASE_DIRECTORY')
-base_dir = Path(base_dir)
+class FetchSporeData(luigi.Task):
 
-# Import fungal spore count data from local postgresql db
-conn = psycopg2.connect(
-    host="localhost",
-    database="daily_spores",
-    user="postgres",
-    password=os.getenv('POSTGRES_PASSWORD')
-)
+    def output(self):
+        return LocalTarget(os.getenv('BASE_DIRECTORY') + "/data/raw/daily_spores.csv")
 
-cur = conn.cursor()
+    def run(self):
+        load_dotenv()
+        base_dir = os.getenv('BASE_DIRECTORY')
+        base_dir = Path(base_dir)
 
-cur.execute("SELECT * FROM daily_spores WHERE aero_type IN ('spores');")
+        # Import fungal spore count data from local postgresql db
+        conn = psycopg2.connect(
+            host="localhost",
+            database="daily_spores",
+            user="postgres",
+            password=os.getenv('POSTGRES_PASSWORD')
+        )
 
-df = pd.DataFrame(cur.fetchall(), columns=[desc[0] for desc in cur.description])
+        cur = conn.cursor()
 
-df.to_csv(base_dir/"data"/"raw"/"daily_spores.csv")
+        cur.execute("SELECT * FROM daily_spores WHERE aero_type IN ('spores');")
 
-cur.close()
-conn.close()
+        df = pd.DataFrame(cur.fetchall(), columns=[desc[0] for desc in cur.description])
 
+        df.to_csv(self.output().path)
 
-
-
-
+        cur.close()
+        conn.close()
