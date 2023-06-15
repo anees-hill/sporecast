@@ -1,9 +1,9 @@
 <img src="https://github.com/anees-hill/sporecast/blob/main/images/spore_cast_logo_v1.png?raw=true" width="400" height="150">
 
 # Introduction
-**SporeCast** is a Python-based tool designed to forecast airborne concentrations of various outdoor fungal spore types, many of which are known triggers for asthma and allergic rhinitis. This robust pipeline leverages the power of Scikit-learn, imbalanced-learn, and TensorFlow, and is orchestrated by Luigi for AWS-based deployment.
+**SporeCast** is a Python-based tool designed to forecast airborne concentrations of various outdoor fungal spore types, many of which are known triggers for asthma and allergic rhinitis. This robust pipeline leverages the power of Scikit-learn, imbalanced-learn, and TensorFlow, and is orchestrated by Luigi for AWS-based deployment. The work was presented at the Royal Meteorological Society's Atmospheric Science Conference 2023 [Link Text](https://www.example.com).
 
-The project is an extension of my ongoing PhD work at the University of Leicester and only includes code (no data). The original work features model training that utilised the world’s longest continuous time-series of fungal spore monitoring data (up to 50 years), including more taxa than those in published studies.
+This ongoing project is an extension of my ongoing PhD work at the University of Leicester and only includes code (no data). The original work features model training that utilised the world’s longest continuous time-series of fungal spore monitoring data (up to 50 years), including more taxa than those in published studies.
 
 ## Major Features
 - **Multi-decade Fungal Spore Time-Series Analysis**: Specifically designed to handle long-term fungal spore time-series data. Given the sensitivity of fungal growth and sporulation patterns to changes in climate and land use, we've implemented novel feature generation that leverages the Kats time-series package.
